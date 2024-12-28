@@ -25,6 +25,8 @@
         "spatie/laravel-medialibrary": "^11.9",
         "stefangabos/world_countries": "^2.9",
         "stevebauman/location": "^7.3",
+        "symfony/http-client": "^7.2",
+        "symfony/mailgun-mailer": "^7.2",
         "tallstackui/tallstackui": "^1.35"
     },
     "require-dev": {
@@ -52,17 +54,17 @@
         }
     },
     "scripts": {
+
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi",
             "@php artisan filament:upgrade",
             "@php artisan config:clear",
-            "@php artisan cache:clear",
-            "@php artisan view:clear",
-            "@php artisan route:clear"
+            "@php artisan route:clear",
+            "@php artisan view:clear"
         ],
         "post-install-cmd": [
-            "@php artisan tallstackui:setup-icon --force --ansi",
+            "@php -d memory_limit=-1 artisan optimize:clear",
             "@php artisan ide-helper:generate"
         ],
         "post-root-package-install": [
