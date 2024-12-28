@@ -64,8 +64,7 @@
             "@php artisan view:clear"
         ],
         "post-install-cmd": [
-            "@php -d memory_limit=-1 artisan optimize:clear",
-            "@php artisan ide-helper:generate"
+            "@php -d memory_limit=-1 artisan optimize:clear"
         ],
         "post-root-package-install": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
