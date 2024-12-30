@@ -52,12 +52,6 @@
                     </div>
                 </div>
 
-                {{-- gender_id --}}
-                <div class="col-span-3">
-                    <x-ts-select.styled wire:model="profileForm.gender_id" id="gender_id" label="{{ __('person.gender') }} :" :options="$profileForm->genders()" select="label:name|value:id"
-                        placeholder="{{ __('app.select') }} ..." wire:dirty.class="bg-warning-200 dark:text-black" searchable />
-                </div>
-                <x-hr.narrow class="col-span-6 !my-0" />
 
                 {{-- yob --}}
                 <div class="col-span-6 md:col-span-3">
@@ -71,7 +65,7 @@
                 </div>
 
                 {{-- pob --}}
-                <div class="col-span-6">
+                <div class="col-span-6 md:col-span-3">
                     <x-ts-input wire:model="profileForm.pob" id="pob" label="{{ __('person.pob') }} :" wire:dirty.class="bg-warning-200 dark:text-black" autocomplete="pod" />
                 </div>
                 <x-hr.narrow class="col-span-6 !my-0" />

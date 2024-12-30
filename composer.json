@@ -19,7 +19,7 @@
         "laravel/tinker": "^2.10",
         "larswiegers/laravel-translations-checker": "^0.9.2",
         "livewire/livewire": "^3.5",
-        "opcodesio/log-viewer": "^3.11",
+        "opcodesio/log-viewer": "^3.12",
         "spatie/laravel-activitylog": "^4.8",
         "spatie/laravel-backup": "^9.1",
         "spatie/laravel-medialibrary": "^11.9",
@@ -27,7 +27,7 @@
         "stevebauman/location": "^7.3",
         "symfony/http-client": "^7.2",
         "symfony/mailgun-mailer": "^7.2",
-        "tallstackui/tallstackui": "^1.35"
+        "tallstackui/tallstackui": "^1.37"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.14",

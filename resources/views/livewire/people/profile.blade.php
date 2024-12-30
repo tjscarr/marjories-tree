@@ -94,17 +94,14 @@
                     <td class="pl-2 break-words max-w-96">{{ $person->nickname }}</td>
                 </tr>
 
-                <tr class="align-top">
-                    <td class="pr-2 border-r-2">{{ __('person.sex') }} ({{ __('person.biological') }})</td>
+                <tr class="align-top border-b-2">
+                    <td class="pr-2 border-r-2">{{ __('person.sex') }} </td>
                     <td class="pl-2">
                         {{ $person->sex == 'm' ? __('app.male') : __('app.female') }}
                         <x-ts-icon icon="{{ $person->sex == 'm' ? 'gender-male' : 'gender-female' }}" class="inline-block size-5" />
                     </td>
                 </tr>
-                <tr class="align-top border-b-2">
-                    <td class="pr-2 border-r-2">{{ __('person.gender') }}</td>
-                    <td class="pl-2 break-words max-w-96">{{ $person->gender ? $person->gender->name : '' }}</td>
-                </tr>
+
 
                 <tr class="align-top">
                     <td class="pr-2 border-r-2">{{ __('person.dob') }}</td>

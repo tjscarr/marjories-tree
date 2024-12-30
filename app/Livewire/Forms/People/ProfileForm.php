@@ -4,11 +4,8 @@ declare(strict_types=1);
 
 namespace App\Livewire\Forms\People;
 
-use App\Models\Gender;
 use App\Rules\DobValid;
 use App\Rules\YobValid;
-use Illuminate\Support\Collection;
-use Livewire\Attributes\Computed;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
 
@@ -16,33 +13,16 @@ class ProfileForm extends Form
 {
     // -----------------------------------------------------------------------
     public $firstname = null;
-
     public $surname = null;
-
     public $marriedname = null;
-
     public $nickname = null;
-
     public $sex = null;
-
-    public $gender_id = null;
-
     #[Validate]
     public $yob = null;
-
     #[Validate]
     public $dob = null;
-
     public $pob = null;
-
     public $summary = null;
-
-    // -----------------------------------------------------------------------
-    #[Computed(persist: true, seconds: 3600, cache: true)]
-    public function genders(): Collection
-    {
-        return Gender::select('id', 'name')->orderBy('name')->get();
-    }
 
     // -----------------------------------------------------------------------
     public function rules(): array
@@ -52,10 +32,7 @@ class ProfileForm extends Form
             'surname'   => ['required', 'string', 'max:255'],
             'marriedname' => ['nullable', 'string', 'max:255'],
             'nickname'  => ['nullable', 'string', 'max:255'],
-
             'sex'       => ['required', 'in:m,f'],
-            'gender_id' => ['nullable', 'integer'],
-
             'yob' => [
                 'nullable',
                 'integer',
@@ -70,7 +47,6 @@ class ProfileForm extends Form
                 new DobValid,
             ],
             'pob' => ['nullable', 'string', 'max:255'],
-
             'summary' => ['nullable', 'string', 'max:65535'],
         ];
     }
@@ -87,14 +63,10 @@ class ProfileForm extends Form
             'surname'   => __('person.surname'),
             'marriedname' => __('person.marriedname'),
             'nickname'  => __('person.nickname'),
-
             'sex'       => __('person.sex'),
-            'gender_id' => __('person.gender'),
-
             'yob' => __('person.yob'),
             'dob' => __('person.dob'),
             'pob' => __('person.pob'),
-
             'summary' => __('person.summary'),
         ];
     }

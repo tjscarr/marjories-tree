@@ -31,7 +31,6 @@ class Profile extends Component
         $this->profileForm->nickname  = $this->person->nickname;
 
         $this->profileForm->sex       = $this->person->sex;
-        $this->profileForm->gender_id = $this->person->gender_id;
 
         $this->profileForm->yob = $this->person->yob ?? null;
         $this->profileForm->dob = $this->person->dob ? Carbon::parse($this->person->dob)->format('Y-m-d') : null;
@@ -67,7 +66,6 @@ class Profile extends Component
         $this->profileForm->nickname != $this->person->nickname or
 
         $this->profileForm->sex != $this->person->sex or
-        $this->profileForm->gender_id != $this->person->gender_id or
 
         $this->profileForm->yob != $this->person->yob or
         $this->profileForm->dob != ($this->person->dob ? Carbon::parse($this->person->dob)->format('Y-m-d') : null) or

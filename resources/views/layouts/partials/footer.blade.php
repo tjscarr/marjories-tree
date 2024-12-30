@@ -1,33 +1,5 @@
 <footer class="text-center print:hidden text-neutral-600 dark:text-neutral-200 lg:text-left">
-    <!-- Top Section: Social Media Links -->
-    <div class="flex items-center justify-center p-2 border-b-2 border-neutral-200 dark:border-neutral-500 lg:justify-between bg-neutral-200 dark:bg-neutral-700">
-        <!-- Social Media Header (Visible on Large Screens) -->
-        <div class="hidden mr-12 lg:block">
-            <span>{{ __('app.connected_social') }}:</span>
-        </div>
-
-        <!-- Social Media Icons -->
-        <div class="flex justify-center">
-            <a href="https://www.facebook.com/" class="mr-6" target="_blank" aria-label="Visit Facebook" title="Facebook">
-                <x-ts-icon icon="brand-facebook" class="text-neutral-900 dark:text-neutral-200" />
-            </a>
-            <a href="https://twitter.com/Kreaweb_be" class="mr-6" target="_blank" aria-label="Visit X (formerly Twitter)" title="X">
-                <x-ts-icon icon="brand-x" class="text-neutral-900 dark:text-neutral-200" />
-            </a>
-            <a href="https://www.instagram.com/" class="mr-6" target="_blank" aria-label="Visit Instagram" title="Instagram">
-                <x-ts-icon icon="brand-instagram" class="text-neutral-900 dark:text-neutral-200" />
-            </a>
-            <a href="https://www.linkedin.com/" class="mr-6" target="_blank" aria-label="Visit LinkedIn" title="LinkedIn">
-                <x-ts-icon icon="brand-linkedin" class="text-neutral-900 dark:text-neutral-200" />
-            </a>
-            <a href="https://www.youtube.com/channel/UClUVszEUeb-nY7qM00ERCHg" class="mr-6" target="_blank" aria-label="Visit YouTube" title="YouTube">
-                <x-ts-icon icon="brand-youtube" class="text-neutral-900 dark:text-neutral-200" />
-            </a>
-            <a href="https://github.com/MGeurts" class="" target="_blank" aria-label="Visit GitHub" title="GitHub">
-                <x-ts-icon icon="brand-github" class="text-neutral-900 dark:text-neutral-200" />
-            </a>
-        </div>
-    </div>
+  
 
     <!-- Middle Section: Main Content -->
     <div class="px-2 py-5 text-center md:text-left bg-neutral-100 dark:bg-neutral-600">
@@ -75,18 +47,12 @@
             <div>
                 <h6 class="flex justify-center mb-4 font-semibold uppercase md:justify-start">{{ __('app.contact') }}</h6>
                 <x-hr.narrow class="w-48 h-1 my-4 bg-gray-100 border-0 rounded max-md:mx-auto dark:bg-gray-700" />
-                <p class="flex items-center justify-center mb-4 md:justify-start">
-                    <x-ts-icon icon="home" class="mr-3 inline-block size-5" />
-                    New York, NY 10012, US
-                </p>
+
                 <p class="flex items-center justify-center mb-4 md:justify-start">
                     <x-ts-icon icon="mail" class="mr-3 inline-block size-5" />
-                    info@example.com
+                    tom@littledatacompany.com
                 </p>
-                <p class="flex items-center justify-center mb-4 md:justify-start">
-                    <x-ts-icon icon="phone" class="mr-3 inline-block size-5" />
-                    + 01 234 567 88
-                </p>
+
             </div>
         </div>
     </div>
