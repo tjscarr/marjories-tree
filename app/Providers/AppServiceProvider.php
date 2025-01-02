@@ -74,15 +74,23 @@ class AppServiceProvider extends ServiceProvider
     {
         Model::shouldBeStrict(! app()->isProduction());
     }
-
     /**
-     * Configure LogViewer settings, grant access to developers.
-     */
+    * Configure LogViewer settings, grant access to developers.
+    * This method now includes safety checks to prevent errors if the package isn't available.
+    */
     private function configureLogViewer(): void
     {
-        LogViewer::auth(function ($request) {
-            return $request->user()->is_developer;
-        });
+        // First check if log viewer is enabled in the configuration
+        if (!config('log-viewer.enabled', false)) {
+            return;
+        }
+    
+        // Then verify the LogViewer facade exists before trying to use it
+        if (class_exists('\Opcodes\LogViewer\Facades\LogViewer')) {
+            LogViewer::auth(function ($request) {
+                return $request->user()->is_developer;
+            });
+        }
     }
 
     /**

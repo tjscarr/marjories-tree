@@ -62,6 +62,7 @@
             "@php artisan config:clear",
             "@php artisan route:clear",
             "@php artisan view:clear"
+            
         ],
         "post-install-cmd": [
             "@php -d memory_limit=-1 artisan optimize:clear"
