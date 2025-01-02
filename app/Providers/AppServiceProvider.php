@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Opcodes\LogViewer\Facades\LogViewer;
-use TallStackUi\Facades\TallStackUi;
+use TallStackUi\Foundation\TallStackUI;  // Updated to use the correct Foundation class
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -33,17 +33,25 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Core Laravel configurations that don't depend on external packages
-        $this->configureUrl();
-        $this->configureStrictMode();
-        $this->addAboutCommandDetails();
-
-        // Configure optional packages with error handling
-        $this->configureOptionalPackages();
-
-        // Database-dependent configurations only run if database is accessible
-        if ($this->isDatabaseOnline() && Schema::hasTable('settings')) {
-            $this->configureDatabaseDependentServices();
+        try {
+            // Core Laravel configurations that should run first
+            $this->configureUrl();
+            $this->configureStrictMode();
+            
+            // Database-independent package configurations
+            $this->configureOptionalPackages();
+            
+            // Database-dependent configurations run last
+            if ($this->isDatabaseOnline() && Schema::hasTable('settings')) {
+                $this->configureDatabaseDependentServices();
+            }
+            
+            $this->addAboutCommandDetails();
+        } catch (\Exception $e) {
+            // Log the error but allow the application to continue booting
+            Log::error('AppServiceProvider boot failed: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
         }
     }
 
@@ -54,16 +62,10 @@ class AppServiceProvider extends ServiceProvider
      */
     private function configureOptionalPackages(): void
     {
-        // TallStackUI configuration needs to run first as it sets up UI components
-        try {
-            if (class_exists('\TallStackUi\Facades\TallStackUi')) {
-                $this->configureTallStackUiPersonalization();
-            }
-        } catch (\Exception $e) {
-            Log::warning('TallStackUI configuration failed: ' . $e->getMessage());
-        }
+        // Configure TallStackUI with proper error boundaries
+        $this->configureTallStackUiPersonalization();
 
-        // LogViewer configuration runs after UI setup is complete
+        // Configure LogViewer with its own error handling
         try {
             if (class_exists('\Opcodes\LogViewer\Facades\LogViewer')) {
                 $this->configureLogViewer();
@@ -73,84 +75,48 @@ class AppServiceProvider extends ServiceProvider
         }
     }
 
-/**
- * Configure TallStackUI personalization with component-specific settings.
- * This method uses TallStackUI's personalization API to customize components.
- */
-private function configureTallStackUiPersonalization(): void
-{
-    try {
-        // Get the personalization instance from TallStackUI
-        $ui = app('tallstackui')->personalize();
+    /**
+     * Configure TallStackUI personalization using the v1.37.1 API.
+     * Each component's personalization is handled separately for better error isolation.
+     */
+    private function configureTallStackUiPersonalization(): void
+    {
+        try {
+            // Get the personalization instance through Laravel's container
+            $personalize = app(TallStackUI::class)->personalize();
 
-        // Now we can configure each component using the personalization instance
-        
-        // Alert Component: Adjust wrapper styles for a more subtle appearance
-        $ui->alert()
-            ->block('wrapper')
-            ->replace('rounded-lg', 'rounded');
+            // Configure card component
+            $personalize->card()
+                ->block('wrapper.second')
+                ->replace('rounded-lg', 'rounded')
+                ->block('wrapper.second')
+                ->replace('dark:bg-dark-700', 'dark:bg-neutral-700');
 
-        // Badge Component: Fine-tune the padding for better visual balance
-        $ui->badge()
-            ->block('wrapper.class')
-            ->replace('px-2', 'px-1');
+            // Configure input component
+            $personalize->input()
+                ->block('input.wrapper')
+                ->replace('rounded-md', 'rounded')
+                ->block('input.base')
+                ->replace('rounded-md', 'rounded');
 
-        // Card Component: Create a cohesive card design with consistent spacing and colors
-        $ui->card()
-            ->block('wrapper.first')->replace('gap-4', 'gap-2')
-            ->block('wrapper.second')->replace('rounded-lg', 'rounded')
-            ->block('wrapper.second')->replace('dark:bg-dark-700', 'dark:bg-neutral-700')
-            ->block('header.wrapper', 'dark:border-b-neutral-600 flex items-center justify-between border-b border-b-gray-100 p-2')
-            ->block('footer.wrapper', 'text-secondary-700 dark:text-dark-300 dark:border-t-neutral-600 rounded rounded-t-none border-t p-2')
-            ->block('footer.text', 'flex items-center justify-end gap-2');
+            // Configure modal component
+            $personalize->modal()
+                ->block('wrapper.fourth')
+                ->replace('rounded-xl', 'rounded')
+                ->block('wrapper.fourth')
+                ->replace('dark:bg-dark-700', 'dark:bg-dark-900');
 
-        // Dropdown Component: Enhance usability with improved spacing and visual hierarchy
-        $ui->dropdown()
-            ->block('floating')->replace('rounded-lg', 'rounded')
-            ->block('width')->replace('w-56', 'w-64')
-            ->block('action.icon')->replace('text-gray-400', 'text-primary-500 dark:text-primary-300');
-
-        // Form Components: Create a consistent form element appearance
-        $ui->form('input')
-            ->block('input.wrapper')->replace('rounded-md', 'rounded')
-            ->block('input.base')->replace('rounded-md', 'rounded');
-
-        $ui->form('textarea')
-            ->block('input.wrapper')->replace('rounded-md', 'rounded')
-            ->block('input.base')->replace('rounded-md', 'rounded');
-
-        $ui->form('label')
-            ->block('text')->replace('text-gray-600', 'text-gray-700')
-            ->block('text')->replace('dark:text-dark-400', 'dark:text-dark-500');
-
-        // Modal Component: Improve modal appearance with subtle background and proper spacing
-        $ui->modal()
-            ->block('wrapper.first')->replace('bg-opacity-50', 'bg-opacity-20')
-            ->block('wrapper.fourth')->replace('dark:bg-dark-700', 'dark:bg-dark-900')
-            ->block('wrapper.fourth')->replace('rounded-xl', 'rounded');
-
-        // Slide Component: Enhance slide transitions and visual consistency
-        $ui->slide()
-            ->block('wrapper.first')->replace('bg-opacity-50', 'bg-opacity-20')
-            ->block('wrapper.fifth')->replace('dark:bg-dark-700', 'dark:bg-dark-900')
-            ->block('footer')->append('dark:text-secondary-600');
-
-        // Tab Component: Improve tab navigation visibility and spacing
-        $ui->tab()
-            ->block('base.wrapper')->replace('rounded-lg', 'rounded')
-            ->block('base.wrapper')->replace('dark:bg-dark-700', 'dark:bg-neutral-700')
-            ->block('item.select')->replace('dark:text-dark-300', 'dark:text-neutral-50');
-
-        // Table Component: Optimize table spacing and appearance
-        $ui->table()
-            ->block('wrapper')->replace('rounded-lg', 'rounded')
-            ->block('table.td')->replace('py-4', 'py-2');
-
-    } catch (\Exception $e) {
-        // Log any configuration errors for debugging
-        Log::warning('TallStackUI personalization failed: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            // Provide detailed error logging for debugging in production
+            Log::warning('TallStackUI personalization failed', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'class_exists' => class_exists(TallStackUI::class),
+                'container_binding' => app()->bound('tallstackui'),
+            ]);
+        }
     }
-}
 
     /**
      * Configure LogViewer settings and access control.
