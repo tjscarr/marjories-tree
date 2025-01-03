@@ -18,42 +18,37 @@ use TallStackUi\Facades\TallStackUi;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
-    public function register(): void
-    {
-        //
+// app/Providers/AppServiceProvider.php
+public function register(): void
+{
+    // Register services only when they're actually needed
+    $this->app->singleton('filament', function ($app) {
+        return $app->make(\Filament\FilamentManager::class);
+    });
+
+    // Defer loading of Livewire until it's needed
+    if (!$this->app->runningInConsole()) {
+        $this->app->beforeResolving('livewire', function () {
+            return true;
+        });
     }
+}
 
-    /**
-     * Bootstrap any application services.
-     */
-    public function boot(): void
-    {
-        // Configure application settings and services
-        $this->configureUrl();
-        $this->configureStrictMode();
-        $this->configureLogViewer();
-        $this->configureTallStackUiPersonalization();
-
-        $this->addAboutCommandDetails();
-
-        if ($this->isDatabaseOnline() && Schema::hasTable('settings')) {
-            // Cache the applications settings
-            $this->app->singleton('settings', function () {
-                return Cache::rememberForever('settings', function () {
-                    return Setting::all()->pluck('value', 'key');
-                });
-            });
-
-            // Enable or disable logging based on application settings
-            $this->logAllQueries();
-            $this->LogAllQueriesSlow();
-            $this->logAllQueriesNplusone();
-        }
+public function boot(): void
+{
+    // Add performance monitoring to understand what's happening
+    if (!app()->environment('production')) {
+        \DB::listen(function($query) {
+            \Log::info(
+                $query->sql,
+                [
+                    'time' => $query->time.'ms',
+                    'bindings' => $query->bindings
+                ]
+            );
+        });
     }
-
+}
     /**
      * Enforce HTTPS in production.
      */
