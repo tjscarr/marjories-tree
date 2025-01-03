@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Opcodes\LogViewer\Facades\LogViewer;
-use TallStackUi\Foundation\TallStackUI;  // Updated to use the correct Foundation class
+use TallStackUi\Facades\TallStackUi;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -28,113 +28,34 @@ class AppServiceProvider extends ServiceProvider
 
     /**
      * Bootstrap any application services.
-     * This method orchestrates the initialization of all application services and packages.
-     * It follows a specific order to ensure dependencies are properly handled.
      */
     public function boot(): void
     {
-        try {
-            // Core Laravel configurations that should run first
-            $this->configureUrl();
-            $this->configureStrictMode();
-            
-            // Database-independent package configurations
-            $this->configureOptionalPackages();
-            
-            // Database-dependent configurations run last
-            if ($this->isDatabaseOnline() && Schema::hasTable('settings')) {
-                $this->configureDatabaseDependentServices();
-            }
-            
-            $this->addAboutCommandDetails();
-        } catch (\Exception $e) {
-            // Log the error but allow the application to continue booting
-            Log::error('AppServiceProvider boot failed: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString()
-            ]);
-        }
-    }
-
-    /**
-     * Configure optional packages with proper error handling.
-     * Each package configuration is isolated in its own try-catch block
-     * to prevent one package's failure from affecting others.
-     */
-    private function configureOptionalPackages(): void
-    {
-        // Configure TallStackUI with proper error boundaries
+        // Configure application settings and services
+        $this->configureUrl();
+        $this->configureStrictMode();
+        $this->configureLogViewer();
         $this->configureTallStackUiPersonalization();
 
-        // Configure LogViewer with its own error handling
-        try {
-            if (class_exists('\Opcodes\LogViewer\Facades\LogViewer')) {
-                $this->configureLogViewer();
-            }
-        } catch (\Exception $e) {
-            Log::warning('LogViewer configuration failed: ' . $e->getMessage());
+        $this->addAboutCommandDetails();
+
+        if ($this->isDatabaseOnline() && Schema::hasTable('settings')) {
+            // Cache the applications settings
+            $this->app->singleton('settings', function () {
+                return Cache::rememberForever('settings', function () {
+                    return Setting::all()->pluck('value', 'key');
+                });
+            });
+
+            // Enable or disable logging based on application settings
+            $this->logAllQueries();
+            $this->LogAllQueriesSlow();
+            $this->logAllQueriesNplusone();
         }
     }
 
     /**
-     * Configure TallStackUI personalization using the v1.37.1 API.
-     * Each component's personalization is handled separately for better error isolation.
-     */
-    private function configureTallStackUiPersonalization(): void
-    {
-        try {
-            // Get the personalization instance through Laravel's container
-            $personalize = app(TallStackUI::class)->personalize();
-
-            // Configure card component
-            $personalize->card()
-                ->block('wrapper.second')
-                ->replace('rounded-lg', 'rounded')
-                ->block('wrapper.second')
-                ->replace('dark:bg-dark-700', 'dark:bg-neutral-700');
-
-            // Configure input component
-            $personalize->input()
-                ->block('input.wrapper')
-                ->replace('rounded-md', 'rounded')
-                ->block('input.base')
-                ->replace('rounded-md', 'rounded');
-
-            // Configure modal component
-            $personalize->modal()
-                ->block('wrapper.fourth')
-                ->replace('rounded-xl', 'rounded')
-                ->block('wrapper.fourth')
-                ->replace('dark:bg-dark-700', 'dark:bg-dark-900');
-
-        } catch (\Exception $e) {
-            // Provide detailed error logging for debugging in production
-            Log::warning('TallStackUI personalization failed', [
-                'error' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'class_exists' => class_exists(TallStackUI::class),
-                'container_binding' => app()->bound('tallstackui'),
-            ]);
-        }
-    }
-
-    /**
-     * Configure LogViewer settings and access control.
-     * Only developers are granted access to the log viewer in production.
-     */
-    private function configureLogViewer(): void
-    {
-        if (!config('log-viewer.enabled', false)) {
-            return;
-        }
-
-        LogViewer::auth(function ($request) {
-            return $request->user()->is_developer;
-        });
-    }
-
-    /**
-     * Enforce HTTPS in production environment.
+     * Enforce HTTPS in production.
      */
     private function configureUrl(): void
     {
@@ -142,12 +63,93 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
-     * Configure strict mode for model behavior.
-     * Enables stricter validation in development environments.
+     * Use Strict Mode (not in production).
+     *
+     * 1. Prevent Lazy Loading
+     * 2. Prevent Silently Discarding Attributes
+     * 3. Prevent Accessing Missing Attributes
+     * Reference: https://coderflex.com/blog/laravel-strict-mode-all-what-you-need-to-know
      */
     private function configureStrictMode(): void
     {
-        Model::shouldBeStrict(!app()->isProduction());
+        Model::shouldBeStrict(! app()->isProduction());
+    }
+
+    /**
+     * Configure LogViewer settings, grant access to developers.
+     */
+    private function configureLogViewer(): void
+    {
+        LogViewer::auth(function ($request) {
+            return $request->user()->is_developer;
+        });
+    }
+
+    /**
+     * Personalize TallStackUi components.
+     *
+     * Reference: https://tallstackui.com/docs/personalization/soft
+     */
+    private function configureTallStackUiPersonalization(): void
+    {
+        $ui = TallStackUi::personalize();
+
+        // Alerts
+        $ui->alert()->block('wrapper')->replace('rounded-lg', 'rounded');
+
+        // Badges
+        $ui->badge()->block('wrapper.class')->replace('px-2', 'px-1');
+
+        // Cards
+        $ui->card()
+            ->block('wrapper.first')->replace('gap-4', 'gap-2')
+            ->block('wrapper.second')->replace('rounded-lg', 'rounded')
+            ->block('wrapper.second')->replace('dark:bg-dark-700', 'dark:bg-neutral-700')
+            ->block('header.wrapper', 'dark:border-b-neutral-600 flex items-center justify-between border-b border-b-gray-100 p-2')
+            ->block('footer.wrapper', 'text-secondary-700 dark:text-dark-300 dark:border-t-neutral-600 rounded rounded-t-none border-t p-2')
+            ->block('footer.text', 'flex items-center justify-end gap-2');
+
+        // Dropdowns
+        $ui->dropdown()
+            ->block('floating')->replace('rounded-lg', 'rounded')
+            ->block('width')->replace('w-56', 'w-64')
+            ->block('action.icon')->replace('text-gray-400', 'text-primary-500 dark:text-primary-300');
+
+        // Forms
+        $ui->form('input')
+            ->block('input.wrapper')->replace('rounded-md', 'rounded')
+            ->block('input.base')->replace('rounded-md', 'rounded');
+
+        $ui->form('textarea')
+            ->block('input.wrapper')->replace('rounded-md', 'rounded')
+            ->block('input.base')->replace('rounded-md', 'rounded');
+
+        $ui->form('label')
+            ->block('text')->replace('text-gray-600', 'text-gray-700')
+            ->block('text')->replace('dark:text-dark-400', 'dark:text-dark-500');
+
+        // Modals
+        $ui->modal()
+            ->block('wrapper.first')->replace('bg-opacity-50', 'bg-opacity-20')
+            ->block('wrapper.fourth')->replace('dark:bg-dark-700', 'dark:bg-dark-900')
+            ->block('wrapper.fourth')->replace('rounded-xl', 'rounded');
+
+        // Slides
+        $ui->slide()
+            ->block('wrapper.first')->replace('bg-opacity-50', 'bg-opacity-20')
+            ->block('wrapper.fifth')->replace('dark:bg-dark-700', 'dark:bg-dark-900')
+            ->block('footer')->append('dark:text-secondary-600');
+
+        // Tabs
+        $ui->tab()
+            ->block('base.wrapper')->replace('rounded-lg', 'rounded')
+            ->block('base.wrapper')->replace('dark:bg-dark-700', 'dark:bg-neutral-700')
+            ->block('item.select')->replace('dark:text-dark-300', 'dark:text-neutral-50');
+
+        // Tables
+        $ui->table()
+            ->block('wrapper')->replace('rounded-lg', 'rounded')
+            ->block('table.td')->replace('py-4', 'py-2');
     }
 
     /**
@@ -164,25 +166,7 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
-     * Configure database-dependent services including settings and logging.
-     */
-    private function configureDatabaseDependentServices(): void
-    {
-        // Cache the applications settings
-        $this->app->singleton('settings', function () {
-            return Cache::rememberForever('settings', function () {
-                return Setting::all()->pluck('value', 'key');
-            });
-        });
-
-        // Enable or disable logging based on application settings
-        $this->logAllQueries();
-        $this->LogAllQueriesSlow();
-        $this->logAllQueriesNplusone();
-    }
-
-    /**
-     * Log all queries for debugging purposes if enabled in settings.
+     * Log all queries for debugging purposes.
      */
     private function logAllQueries(): void
     {
@@ -192,7 +176,7 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
-     * Log slow queries based on configured threshold.
+     * Log all slow queries for debugging purposes.
      */
     private function LogAllQueriesSlow(): void
     {
@@ -209,7 +193,7 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
-     * Log N+1 query violations for debugging purposes.
+     * Log all (N+1) queries for debugging purposes.
      */
     private function logAllQueriesNplusone(): void
     {
@@ -231,8 +215,11 @@ class AppServiceProvider extends ServiceProvider
     {
         try {
             DB::connection()->getPdo();
+
             return true;
         } catch (\Exception $e) {
+            // Log the exception if needed for debugging
+            // Log::error('Database connection error: ' . $e->getMessage());
             return false;
         }
     }
