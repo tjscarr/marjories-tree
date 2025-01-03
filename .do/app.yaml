@@ -2,15 +2,25 @@ name: family-tree-roots
 services:
 - name: web
   environment_slug: php
-  instance_size_slug: basic-xs  # Increased size due to Filament and MediaLibrary
+  instance_size_slug: basic-xxs    # This matches your 1GB/1vCPU spec
   github:
     branch: main
     deploy_on_push: true
-  run_command: heroku-php-apache2 public/
+  run_command: heroku-php-apache2 -F fpm_custom.conf -i php_custom.ini public/
   build_command: |
-    composer install --no-dev --optimize-autoloader
-    npm install && npm run build
+    composer install --no-dev --optimize-autoloader --prefer-dist --no-scripts
+    composer dump-autoload -o
+    php artisan config:cache
+    php artisan route:cache
+    php artisan view:cache
+    npm install --production && npm run build
   envs:
+  - key: PHP_MEMORY_LIMIT
+    value: "256M"
+  - key: PHP_MAX_EXECUTION_TIME
+    value: "30"
+  - key: FPM_MAX_CHILDREN
+    value: "3"
   - key: APP_NAME
     value: "Your App Name"
   - key: APP_ENV
