@@ -1,0 +1,36 @@
+name: family-tree-roots
+services:
+- name: web
+  environment_slug: php
+  instance_size_slug: basic-xs  # Increased size due to Filament and MediaLibrary
+  github:
+    branch: main
+    deploy_on_push: true
+  run_command: heroku-php-apache2 public/
+  build_command: |
+    composer install --no-dev --optimize-autoloader
+    npm install && npm run build
+  envs:
+  - key: APP_NAME
+    value: "Your App Name"
+  - key: APP_ENV
+    value: "production"
+  - key: APP_DEBUG
+    value: "false"
+  - key: APP_URL
+    value: ${APP_URL}
+  - key: APP_KEY
+    scope: RUN_AND_BUILD_TIME
+    value: ${APP_KEY}
+  - key: LIVEWIRE_ASSET_URL
+    value: ${APP_URL}
+  - key: MEDIA_DISK
+    value: "s3"  # For Spatie Media Library
+  - key: QUEUE_CONNECTION
+    value: "database"  # Or "redis" if you prefer
+  - key: CACHE_DRIVER
+    value: "redis"
+  - key: SESSION_DRIVER
+    value: "redis"
+  - key: FILESYSTEM_DISK
+    value: "do"  # For Digital Ocean Spaces

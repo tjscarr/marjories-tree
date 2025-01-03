@@ -14,4 +14,15 @@ export default defineConfig({
             ],
         }),
     ],
+    build: {
+        // Ensure assets are built correctly for production
+        manifest: true,
+        outDir: 'public/build',
+        rollupOptions: {
+            output: {
+                manualChunks: undefined,
+            },
+        },
+    },
 });
+
