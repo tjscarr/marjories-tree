@@ -48,6 +48,15 @@ return [
             'local_domain' => env('MAIL_EHLO_DOMAIN'),
         ],
 
+        'mailgun' => [
+            'transport' => 'mailgun',
+            'domain' => env('MAILGUN_DOMAIN'),
+            'secret' => env('MAILGUN_SECRET'),
+            'endpoint' => env('MAILGUN_ENDPOINT', 'api.mailgun.net'), // Default API endpoint
+            'scheme' => 'https', // Connection scheme
+        ],
+    
+
         'ses' => [
             'transport' => 'ses',
         ],

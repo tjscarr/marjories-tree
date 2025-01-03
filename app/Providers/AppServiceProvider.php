@@ -153,9 +153,8 @@ public function boot(): void
     private function addAboutCommandDetails(): void
     {
         AboutCommand::add('Application', [
-            'Name'    => 'Genealogy',
-            'Author'  => 'kreaweb.be',
-            'GitHub'  => 'https://github.com/MGeurts/genealogy',
+            'Name'    => 'Family Tree Roots',
+            'Author'  => 'Tom Scarr',
             'License' => 'MIT License',
         ]);
     }
