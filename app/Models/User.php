@@ -61,6 +61,8 @@ class User extends Authenticatable
         'is_developer',
 
         'seen_at',
+
+        'person_id',
     ];
 
     /**
@@ -139,6 +141,11 @@ class User extends Authenticatable
     public function hasPermission(string $permission): bool
     {
         return $this->hasTeamPermission($this->currentTeam, $permission);
+    }
+
+    public function person()
+    {
+        return $this->belongsTo(Person::class);
     }
 
     public function teamsStatistics(): Collection
